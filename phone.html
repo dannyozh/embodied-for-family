@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embodied for Family (Phone)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   THEME: Lamplight Doorway
+   Change these to recolour the whole deck
+   =========================================== */
+:root {
+    --stage-bg: #1e0e08;
+    --clay: #b5532e;
+    --clay-light: #c96a3c;
+    --deep: #5a2414;
+    --night: #2a140c;
+    --apricot: #f2b880;
+    --glow: #ffe2b0;
+    --cream: #fbf1e3;
+    --cream-2: #f3e1cb;
+
+    --font-display: 'Young Serif', Georgia, serif;
+    --font-body: 'Figtree', sans-serif;
+
+    --pad-x: 160px;
+    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ===========================================
+   FIXED 16:9 STAGE: MANDATORY BASE STYLES
+   (viewport-base.css, included in full)
+   =========================================== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.deck-controls {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+@media print {
+    html,
+    body {
+        width: 1080px;
+        height: auto;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .deck-viewport {
+        position: static;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .deck-stage {
+        position: static;
+        width: auto;
+        height: auto;
+        transform: none !important;
+        background: none;
+    }
+
+    .slide {
+        position: relative;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 1080px;
+        height: 1920px;
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .slide:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    .deck-controls {
+        display: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* ===========================================
+   SLIDE SURFACES
+   .bg-clay  = warm lamplight (title, recap, close)
+   .bg-night = dark room (sermon hooks)
+   .bg-cream = paper (discussion questions)
+   =========================================== */
+.slide { font-family: var(--font-body); transition: opacity 0.5s ease, visibility 0.5s; }
+
+.bg-clay {
+    background: radial-gradient(1100px 900px at 72% 60%, var(--clay-light) 0%, var(--clay) 38%, var(--deep) 100%);
+    color: var(--cream);
+}
+.bg-night {
+    background: radial-gradient(1000px 800px at 80% 85%, #7a3218 0%, var(--deep) 40%, var(--night) 100%);
+    color: var(--cream);
+}
+.bg-cream {
+    background: radial-gradient(1200px 900px at 15% 10%, #fffaf2 0%, var(--cream) 45%, var(--cream-2) 100%);
+    color: var(--deep);
+}
+
+/* Fine vertical grain over every surface */
+.slide::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 2px, transparent 2px 7px);
+    pointer-events: none;
+}
+
+/* ===========================================
+   SHARED TYPE
+   =========================================== */
+.kick {
+    font-size: 30px;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--apricot);
+}
+.bg-cream .kick { color: var(--clay); }
+
+.display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -.01em;
+    line-height: 1.02;
+}
+
+.lede {
+    font-size: 46px;
+    line-height: 1.4;
+    font-weight: 300;
+    color: rgba(251, 241, 227, .88);
+}
+.lede b { font-weight: 600; color: var(--glow); }
+
+/* ===========================================
+   DOORWAY ARCH (signature device)
+   =========================================== */
+.arch {
+    position: absolute;
+    bottom: 0;
+    border-radius: 999px 999px 0 0;
+    background: radial-gradient(70% 70% at 50% 70%, var(--glow), var(--apricot) 55%, #e08a52 100%);
+    box-shadow: 0 0 160px 40px rgba(255, 200, 140, .32);
+    animation: breathe 6s ease-in-out infinite;
+}
+.arch.framed::before {
+    content: "";
+    position: absolute;
+    inset: -28px -28px 0;
+    border-radius: 999px 999px 0 0;
+    border: 3px solid rgba(251, 241, 227, .5);
+    border-bottom: 0;
+}
+.arch.outline {
+    background: none;
+    box-shadow: none;
+    border: 3px solid rgba(251, 241, 227, .45);
+    border-bottom: 0;
+    animation: none;
+}
+@keyframes breathe { 50% { box-shadow: 0 0 220px 70px rgba(255, 200, 140, .44); } }
+
+/* Father & child silhouettes standing in the doorway */
+.fig { position: absolute; bottom: 0; background: var(--deep); border-radius: 60px 60px 0 0; }
+.fig::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: var(--deep);
+}
+.fig.big { width: 130px; height: 300px; }
+.fig.big::before { width: 96px; height: 96px; top: -104px; }
+.fig.small { width: 76px; height: 160px; }
+.fig.small::before { width: 66px; height: 66px; top: -72px; }
+
+/* ===========================================
+   DECK CHROME: footer title, counter, progress
+   =========================================== */
+.foot {
+    position: absolute;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    bottom: 64px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: .6;
+    z-index: 2;
+}
+.progress {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 4px;
+    background: var(--apricot);
+    z-index: 1000;
+    transition: width .5s var(--ease);
+}
+
+/* ===========================================
+   REVEAL ANIMATIONS
+   Each .reveal sets its own delay with style="--d:.3s"
+   =========================================== */
+.reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity .9s var(--ease), transform .9s var(--ease);
+    transition-delay: var(--d, 0s);
+}
+.slide.visible .reveal { opacity: 1; transform: none; }
+
+/* ===========================================
+   LAYOUT: TITLE + CLOSE
+   =========================================== */
+.title-wrap { position: absolute; left: var(--pad-x); top: 200px; width: 980px; }
+.title-wrap h1 { font-size: 158px; margin-top: 34px; }
+.title-wrap .lede { margin-top: 54px; max-width: 860px; }
+.steps {
+    position: absolute;
+    left: var(--pad-x);
+    bottom: 140px;
+    display: flex;
+    gap: 46px;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: .06em;
+}
+.steps span:nth-child(even) { opacity: .6; }
+
+.door-right { right: 250px; width: 560px; height: 820px; }
+.door-right .fig.big { left: 150px; }
+.door-right .fig.small { left: 300px; }
+
+/* ===========================================
+   LAYOUT: RECAP (text left, numbered doorway right)
+   =========================================== */
+.recap-text { position: absolute; left: var(--pad-x); top: 210px; width: 1060px; }
+.recap-text h2 { font-size: 120px; margin-top: 36px; }
+.recap-text .lede { margin-top: 48px; }
+.recap-door { right: 230px; width: 440px; height: 700px; display: flex; align-items: flex-end; justify-content: center; }
+.recap-door .num {
+    font-family: var(--font-display);
+    font-size: 300px;
+    line-height: 1;
+    color: var(--deep);
+    margin-bottom: 120px;
+}
+
+/* Parent ↔ Parent comparison */
+.pairs { margin-top: 56px; display: grid; grid-template-columns: 1fr 70px 1.25fr; row-gap: 30px; align-items: center; width: 1560px; }
+.pairs .h { font-size: 26px; letter-spacing: .2em; text-transform: uppercase; font-weight: 600; color: var(--apricot); }
+.pairs .a { font-size: 44px; font-weight: 400; }
+.pairs .x { font-size: 40px; color: var(--apricot); text-align: center; }
+.pairs .b { font-family: var(--font-display); font-size: 48px; color: var(--glow); }
+
+/* ===========================================
+   LAYOUT: ROADMAP (three doorways)
+   =========================================== */
+.road-head { position: absolute; left: var(--pad-x); top: 150px; }
+.road-head h2 { font-size: 110px; margin-top: 26px; }
+.road { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 0; height: 560px; display: flex; gap: 48px; }
+.road .arch { position: relative; flex: 1; height: 100%; color: var(--deep); padding: 150px 30px 0; animation-delay: calc(var(--i) * -2s); }
+.road .arch .step { font-size: 28px; letter-spacing: .24em; text-transform: uppercase; font-weight: 600; text-align: center; }
+.road .arch .what { font-family: var(--font-display); font-size: 62px; line-height: 1.12; text-align: center; margin-top: 24px; }
+.road .arch .what small { display: block; font-family: var(--font-body); font-size: 34px; font-weight: 500; margin-top: 22px; opacity: .75; }
+
+/* ===========================================
+   LAYOUT: HOOK (what the sermon said)
+   =========================================== */
+.hook { position: absolute; left: var(--pad-x); top: 170px; width: 1100px; }
+.hook blockquote { font-family: var(--font-display); font-size: 104px; line-height: 1.08; margin-top: 54px; }
+.hook blockquote.mid { font-size: 70px; line-height: 1.14; margin-top: 44px; }
+.hook .src { margin-top: 44px; font-size: 34px; color: var(--apricot); font-weight: 500; letter-spacing: .04em; }
+.hook .aside { margin-top: 56px; padding-left: 34px; border-left: 3px solid var(--apricot); font-size: 40px; line-height: 1.4; font-weight: 300; max-width: 1050px; }
+.hook .aside b { font-weight: 600; color: var(--glow); }
+.hook-door { right: 260px; width: 360px; height: 560px; }
+
+.lines { margin-top: 54px; display: grid; gap: 26px; }
+.lines div { display: grid; grid-template-columns: 90px 1fr; align-items: baseline; font-family: var(--font-display); font-size: 72px; line-height: 1.1; }
+.lines div span { color: var(--apricot); font-size: 40px; font-family: var(--font-body); font-weight: 600; }
+
+/* ===========================================
+   LAYOUT: QUESTIONS (cream paper)
+   =========================================== */
+.qs { position: absolute; left: var(--pad-x); top: 170px; width: 1600px; }
+.qs h2 { font-size: 92px; margin-top: 26px; color: var(--clay); }
+.qlist { margin-top: 64px; display: grid; gap: 54px; }
+.q { display: grid; grid-template-columns: 110px 1fr; align-items: start; }
+.q .n { font-family: var(--font-display); font-size: 92px; line-height: .9; color: var(--clay); }
+.q p { font-size: 58px; line-height: 1.24; font-weight: 500; color: var(--deep); }
+.q p em { font-style: normal; color: var(--clay); }
+.qs-door { right: 0; width: 220px; height: 420px; border-radius: 999px 0 0 0; opacity: .9; }
+.bg-cream .foot { color: var(--deep); }
+.bg-night .foot { justify-content: flex-start; gap: 48px; }
+
+/* ===========================================
+   INLINE EDITING (press E, or hover the top-left corner)
+   =========================================== */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+.edit-toggle {
+    position: fixed; top: 16px; left: 16px; z-index: 10001;
+    width: 48px; height: 48px; border-radius: 50%; border: 0;
+    background: var(--cream); color: var(--deep); font-size: 22px; cursor: pointer;
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-toggle.active { background: var(--apricot); }
+body.editing [contenteditable="true"] { outline: 2px dashed rgba(242, 184, 128, .7); outline-offset: 6px; }
+
+/* ===========================================
+   PHONE LAYOUT: portrait 1080×1920 stage
+   Same design system, re-stacked: text on top, doorway at the bottom
+   =========================================== */
+:root { --pad-x: 90px; }
+
+/* Doorways sit centred along the bottom edge */
+.door-right, .recap-door, .hook-door { right: auto; left: 50%; margin-left: calc(var(--w) / -2); width: var(--w); }
+.door-right { --w: 500px; height: 720px; }
+.door-right .fig.big { left: 130px; }
+.door-right .fig.small { left: 280px; }
+.recap-door { --w: 400px; height: 600px; }
+.recap-door .num { font-size: 240px; margin-bottom: 110px; }
+.hook-door { --w: 340px; height: 500px; }
+
+/* Title + close */
+.title-wrap { top: 230px; width: calc(1080px - 2 * var(--pad-x)); }
+.title-wrap h1 { font-size: 150px; }
+.title-wrap .lede { max-width: none; }
+.lede { font-size: 52px; }
+.steps { bottom: auto; top: 1030px; gap: 30px; font-size: 36px; }
+
+/* Recap */
+.recap-text, .recap-text[style] { top: 210px; width: calc(1080px - 2 * var(--pad-x)) !important; }
+.recap-text h2 { font-size: 112px; }
+.pairs { width: 100%; grid-template-columns: 1fr; row-gap: 0; margin-top: 70px; }
+.pairs .h, .pairs .x, .pairs > div:empty { display: none; }
+.pairs .a { font-size: 42px; opacity: .8; }
+.pairs .b { font-size: 60px; line-height: 1.12; margin: 10px 0 56px; }
+
+/* Roadmap: 2×2 doorways */
+.road-head { top: 200px; }
+.road { top: 560px; height: auto; flex-wrap: wrap; gap: 44px; }
+.road .arch { flex: 0 0 calc(50% - 22px); height: 640px; padding-top: 170px; }
+.road .arch .what { font-size: 58px; }
+
+/* Hooks */
+.hook { top: 210px; width: calc(1080px - 2 * var(--pad-x)); }
+.hook blockquote { font-size: 112px; }
+.hook blockquote.mid { font-size: 66px; }
+.hook .aside { font-size: 44px; max-width: none; }
+.lines div { font-size: 80px; grid-template-columns: 80px 1fr; }
+
+/* Questions */
+.qs { top: 210px; width: calc(1080px - 2 * var(--pad-x)); }
+.qs h2 { font-size: 100px; }
+.qlist { gap: 70px; margin-top: 80px; }
+.q { grid-template-columns: 90px 1fr; }
+.q p { font-size: 66px; }
+.qs-door { width: 200px; height: 380px; }
+
+.foot { top: 90px; bottom: auto; font-size: 22px; justify-content: space-between !important; }
+
+/* ===========================================
+   PHONE V2: fewer words, more pictures
+   Every content slide is a vertical pane:
+   heading on top, illustration in the middle, key point below
+   =========================================== */
+.pane {
+    position: absolute;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    top: 200px;
+    bottom: 130px;
+    display: flex;
+    flex-direction: column;
+}
+.pane h2 { font-size: 104px; margin-top: 24px; }
+.bg-cream .pane h2 { color: var(--clay); }
+.pane .art { margin-block: auto; }
+.pane .art svg { display: block; width: 100%; height: auto; }
+.key { font-size: 56px; line-height: 1.25; font-weight: 300; }
+.key b { font-weight: 600; color: var(--glow); }
+.bg-cream .key b { color: var(--clay); }
+.small { font-size: 36px; opacity: .7; margin-top: 14px; font-weight: 400; }
+
+/* SVG paint helpers (CSS vars don't work in SVG attributes, so use classes) */
+.f-deep { fill: var(--deep); }
+.f-clay { fill: var(--clay); }
+.f-ap { fill: var(--apricot); }
+.f-glow { fill: var(--glow); }
+.f-cream { fill: var(--cream); }
+.s-cream { stroke: var(--cream); fill: none; }
+.s-ap { stroke: var(--apricot); fill: none; }
+.s-glow { stroke: var(--glow); fill: none; }
+.s-clay { stroke: var(--clay); fill: none; }
+.s-deep { stroke: var(--deep); fill: none; }
+.t-lbl { font-family: var(--font-body); font-size: 40px; font-weight: 600; letter-spacing: .04em; }
+.t-big { font-family: var(--font-display); font-size: 56px; }
+
+/* === FLOW: numbered vertical path (framework, roadmap) === */
+.flow { position: relative; display: grid; }
+.flow::before {
+    content: "";
+    position: absolute;
+    left: 63px; top: 80px; bottom: 80px;
+    width: 4px;
+    background: rgba(242, 184, 128, .45);
+}
+.flow .step { display: grid; grid-template-columns: 130px 1fr; column-gap: 40px; align-items: center; padding: 22px 0; }
+.flow .dot {
+    position: relative;
+    width: 130px; height: 130px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: radial-gradient(circle at 50% 60%, var(--glow), var(--apricot) 70%, #e08a52);
+    color: var(--deep);
+    font-family: var(--font-display);
+    font-size: 58px;
+}
+.flow .lbl { font-family: var(--font-display); font-size: 64px; line-height: 1.05; }
+.flow .sub { font-size: 38px; opacity: .75; margin-top: 8px; }
+.flow .grp { font-size: 26px; letter-spacing: .24em; text-transform: uppercase; font-weight: 600; color: var(--apricot); margin-bottom: 6px; }
+
+/* === PAIRS: parent → Father === */
+.pairs2 { display: grid; grid-template-columns: 1fr 70px 1.2fr; row-gap: 34px; align-items: center; margin-top: 40px; }
+.pairs2 .a { font-size: 46px; opacity: .8; }
+.pairs2 .x { font-size: 46px; color: var(--apricot); text-align: center; }
+.pairs2 .b { font-family: var(--font-display); font-size: 54px; color: var(--glow); line-height: 1.1; }
+
+/* === QUESTION CARDS (cream slides) === */
+.qcards { display: grid; gap: 70px; margin-top: 70px; }
+.qcard { display: grid; grid-template-columns: 150px 1fr; column-gap: 44px; align-items: center; }
+.qcard .ic { width: 150px; height: 150px; border-radius: 50%; background: var(--clay); display: grid; place-items: center; }
+.qcard .ic svg { width: 86px; height: 86px; }
+.qcard .qt { font-family: var(--font-display); font-size: 74px; line-height: 1.05; color: var(--deep); }
+.qcard .qsub { font-size: 42px; color: var(--deep); opacity: .7; margin-top: 12px; }
+
+/* === CHIPS: said / shown / assumed === */
+.chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 60px; text-align: center; }
+.chip .ring {
+    width: 250px; height: 250px; margin: 0 auto; border-radius: 50%;
+    display: grid; place-items: center;
+    border: 4px solid var(--clay);
+    background: rgba(255, 255, 255, .45);
+}
+.chip .ring svg { width: 120px; height: 120px; }
+.chip.dash .ring { border-style: dashed; background: none; }
+.chip span { display: block; margin-top: 24px; font-family: var(--font-display); font-size: 54px; color: var(--deep); }
+
+/* === TILES: four arch doorways with icons === */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 60px; }
+.tile {
+    height: 560px;
+    border-radius: 999px 999px 0 0;
+    background: radial-gradient(70% 70% at 50% 70%, var(--glow), var(--apricot) 55%, #e08a52 100%);
+    color: var(--deep);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 80px 30px 0; text-align: center;
+}
+.tile svg { width: 150px; height: 150px; }
+.tile .lbl { font-family: var(--font-display); font-size: 54px; line-height: 1.08; margin-top: 30px; }
+
+.qcards.tight { gap: 64px; margin-top: 40px; }
+.qcards.tight .qt { font-size: 64px; }
+
+/* === ANCHOR VERSE (title slide) === */
+.verse { margin-top: 50px; padding-left: 36px; border-left: 6px solid var(--glow); font-size: 46px; line-height: 1.35; font-weight: 300; max-width: 820px; }
+.verse b { font-weight: 600; color: var(--glow); }
+</style>
+</head>
+<body>
+<!-- Shared SVG gradients -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <radialGradient id="g-glow"><stop offset="0" style="stop-color:var(--glow);stop-opacity:.95"/><stop offset=".55" style="stop-color:var(--apricot);stop-opacity:.5"/><stop offset="1" style="stop-color:var(--apricot);stop-opacity:0"/></radialGradient>
+        <linearGradient id="g-arch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:#e08a52"/><stop offset=".6" style="stop-color:var(--apricot)"/><stop offset="1" style="stop-color:var(--glow)"/></linearGradient>
+    </defs>
+</svg>
+
+<div class="progress" id="progress"></div>
+<div class="edit-hotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)" aria-label="Toggle edit mode">✎</button>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+    <!-- === 1. TITLE === -->
+    <section class="slide bg-clay active" aria-label="Title">
+        <div class="arch framed door-right"><div class="fig big"></div><div class="fig small"></div></div>
+        <div class="title-wrap">
+            <div class="kick reveal" style="--d:.1s">Hebrews 12:11</div>
+            <h1 class="display reveal" style="--d:.3s">Embodied for Family</h1>
+            <blockquote class="verse reveal" style="--d:.6s">“No discipline is enjoyable while it is happening—it’s painful! But afterward there will be <b>a peaceful harvest of right living</b> for those who are trained in this way.”</blockquote>
+        </div>
+        <div class="steps reveal" style="--d:.9s"><span>Look back</span><span>·</span><span>Look up</span><span>·</span><span>Look ahead</span></div>
+    </section>
+
+    <!-- === 2. RECAP: GIFT (overflowing cup) === -->
+    <section class="slide bg-clay" aria-label="Gift">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">The sermon · Gift</div>
+            <h2 class="display reveal" style="--d:.25s">A child is a gift.</h2>
+            <div class="art reveal" style="--d:.45s">
+                <svg viewBox="0 0 900 720">
+                    <circle cx="450" cy="300" r="320" fill="url(#g-glow)"/>
+                    <ellipse class="f-deep" cx="450" cy="680" rx="320" ry="30" opacity=".45"/>
+                    <ellipse class="f-glow" cx="450" cy="676" rx="250" ry="18" opacity=".8"/>
+                    <path class="f-cream" d="M240 250 L660 250 L610 610 Q600 650 560 650 L340 650 Q300 650 290 610 Z"/>
+                    <path class="s-ap" stroke-width="34" stroke-linecap="round" d="M662 330 Q760 340 750 440 Q740 520 640 520"/>
+                    <ellipse class="f-glow" cx="450" cy="250" rx="212" ry="38"/>
+                    <path class="f-glow" d="M245 250 Q228 330 248 420 Q256 450 240 470 L262 470 Q270 400 262 260 Z"/>
+                    <path class="f-glow" d="M655 250 Q672 300 660 350 L646 350 Q650 300 640 258 Z"/>
+                    <circle class="f-glow" cx="250" cy="530" r="16"/>
+                    <circle class="f-glow" cx="236" cy="610" r="11"/>
+                    <circle class="f-glow" cx="690" cy="420" r="13"/>
+                    <path class="s-glow" stroke-width="6" stroke-linecap="round" opacity=".7" d="M390 170 Q370 130 400 100 M450 160 Q440 110 470 80 M510 170 Q495 130 520 104"/>
+                </svg>
+            </div>
+            <p class="key reveal" style="--d:.7s">Love that <b>overflows</b>.<span class="small" style="display:block">Not a complication. A confession.</span></p>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 3. RECAP: BODY (screen vs presence) === -->
+    <section class="slide bg-clay" aria-label="Body">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">The sermon · Body</div>
+            <h2 class="display reveal" style="--d:.25s">Be present.</h2>
+            <div class="art reveal" style="--d:.45s">
+                <svg viewBox="0 0 900 760">
+                    <rect class="s-cream" x="70" y="170" width="240" height="430" rx="36" stroke-width="5" opacity=".55"/>
+                    <circle class="f-cream" cx="190" cy="330" r="38" opacity=".35"/>
+                    <rect class="f-cream" x="152" y="380" width="76" height="130" rx="38" opacity=".35"/>
+                    <text class="t-lbl f-cream" x="190" y="690" text-anchor="middle" opacity=".7">Screen</text>
+                    <text class="t-big f-ap" x="400" y="420" text-anchor="middle" style="font-size:110px">≠</text>
+                    <circle cx="660" cy="420" r="250" fill="url(#g-glow)"/>
+                    <circle class="f-deep" cx="610" cy="290" r="54"/>
+                    <rect class="f-deep" x="552" y="355" width="116" height="300" rx="58"/>
+                    <circle class="f-deep" cx="725" cy="360" r="44"/>
+                    <rect class="f-deep" x="678" y="414" width="94" height="241" rx="47"/>
+                    <path class="s-deep" stroke-width="36" stroke-linecap="round" d="M640 430 Q700 470 748 450"/>
+                    <text class="t-lbl f-glow" x="660" y="720" text-anchor="middle">Presence</text>
+                </svg>
+            </div>
+            <p class="key reveal" style="--d:.7s"><b>Hug</b> at every age.<span class="small" style="display:block">Even where there’s tension.</span></p>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 4. RECAP: HOLINESS (discipline framework) === -->
+    <section class="slide bg-clay" aria-label="Holiness">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">The sermon · Holiness</div>
+            <h2 class="display reveal" style="--d:.25s">Discipline, for our good.</h2>
+            <div class="art flow">
+                <div class="step reveal" style="--d:.45s"><div class="dot">1</div><div><div class="lbl">Secure home</div><div class="sub">It pains you to pain them</div></div></div>
+                <div class="step reveal" style="--d:.6s"><div class="dot">2</div><div><div class="lbl">Never in anger</div><div class="sub">Prayer and patience</div></div></div>
+                <div class="step reveal" style="--d:.75s"><div class="dot">3</div><div><div class="lbl">Fitted to the child</div><div class="sub">No one-size method</div></div></div>
+                <div class="step reveal" style="--d:.9s"><div class="dot">4</div><div><div class="lbl">Righteousness &amp; peace</div><div class="sub">The goal (Heb 12:11)</div></div></div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 5. RECAP: GOD THE FIRST PARENT (two arches) === -->
+    <section class="slide bg-night" aria-label="Gospel">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">The sermon · Gospel</div>
+            <h2 class="display reveal" style="--d:.25s">God, the first Parent.</h2>
+            <div class="art">
+                <svg class="reveal" style="--d:.45s" viewBox="0 0 900 600">
+                    <circle cx="690" cy="380" r="300" fill="url(#g-glow)" opacity=".7"/>
+                    <path class="s-cream" stroke-width="5" opacity=".6" d="M90 520 L90 360 A130 130 0 0 1 350 360 L350 520"/>
+                    <path fill="url(#g-arch)" d="M500 520 L500 250 A190 190 0 0 1 880 250 L880 520 Z"/>
+                    <line class="s-cream" x1="40" y1="520" x2="900" y2="520" stroke-width="3" opacity=".35"/>
+                    <text class="t-lbl f-cream" x="220" y="585" text-anchor="middle" opacity=".75">A parent</text>
+                    <text class="t-lbl f-glow" x="690" y="585" text-anchor="middle">Our Father</text>
+                </svg>
+                <div class="pairs2">
+                    <div class="a reveal" style="--d:.65s">Holds</div><div class="x reveal" style="--d:.65s">→</div><div class="b reveal" style="--d:.7s">Embraces us</div>
+                    <div class="a reveal" style="--d:.8s">Disciplines</div><div class="x reveal" style="--d:.8s">→</div><div class="b reveal" style="--d:.85s">Makes us holy</div>
+                    <div class="a reveal" style="--d:.95s">Feels the pain</div><div class="x reveal" style="--d:.95s">→</div><div class="b reveal" style="--d:1s">The cross</div>
+                </div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 6. ROADMAP (direction path) === -->
+    <section class="slide bg-clay" aria-label="Tonight">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">Tonight</div>
+            <h2 class="display reveal" style="--d:.25s">Three conversations.</h2>
+            <div class="art flow">
+                <div class="step reveal" style="--d:.45s"><div class="dot">←</div><div><div class="grp">Look back</div><div class="lbl">Our parents &amp; affection</div></div></div>
+                <div class="step reveal" style="--d:.6s"><div class="dot">↑</div><div><div class="grp">Look up</div><div class="lbl">Father God</div></div></div>
+                <div class="step reveal" style="--d:.75s"><div class="dot">→</div><div><div class="grp">Look ahead</div><div class="lbl">Fatherhood</div></div></div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 7. ANGLE 1 HOOK (harder & happier chart) === -->
+    <section class="slide bg-night" aria-label="Angle 1">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">01 · Look back · Parents</div>
+            <h2 class="display reveal" style="--d:.25s">Never harder. Never happier.</h2>
+            <div class="art reveal" style="--d:.45s">
+                <svg viewBox="0 0 900 640">
+                    <path class="s-cream" stroke-width="3" opacity=".4" d="M80 40 L80 560 L870 560"/>
+                    <path class="s-cream" stroke-width="8" stroke-dasharray="20 16" stroke-linecap="round" opacity=".7" d="M80 520 C300 480 520 330 840 210"/>
+                    <path class="s-glow" stroke-width="14" stroke-linecap="round" d="M80 540 C320 500 520 260 840 100"/>
+                    <circle class="f-glow" cx="840" cy="100" r="18"/>
+                    <circle class="f-cream" cx="840" cy="210" r="14" opacity=".8"/>
+                    <text class="t-lbl f-glow" x="800" y="60" text-anchor="end">Happier</text>
+                    <text class="t-lbl f-cream" x="870" y="330" text-anchor="end" opacity=".8">Harder</text>
+                    <text class="t-lbl f-cream" x="475" y="625" text-anchor="middle" opacity=".55" style="font-size:34px">Years as a parent</text>
+                </svg>
+            </div>
+            <p class="key reveal" style="--d:.7s">Our parents lived this <b>for us</b>.</p>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 9. ANGLE 3 HOOK (apart = cold, together = warm) === -->
+    <section class="slide bg-night" aria-label="Angle 2">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">01 · Look back · Affection</div>
+            <h2 class="display reveal" style="--d:.25s">Absence makes the heart grow cold.</h2>
+            <div class="art reveal" style="--d:.45s">
+                <svg viewBox="0 0 900 780">
+                    <circle class="f-cream" cx="150" cy="90" r="40" opacity=".22"/>
+                    <rect class="f-cream" x="105" y="140" width="90" height="190" rx="45" opacity=".22"/>
+                    <circle class="f-cream" cx="750" cy="90" r="40" opacity=".22"/>
+                    <rect class="f-cream" x="705" y="140" width="90" height="190" rx="45" opacity=".22"/>
+                    <line class="s-cream" x1="230" y1="230" x2="670" y2="230" stroke-width="5" stroke-dasharray="4 18" stroke-linecap="round" opacity=".45"/>
+                    <text class="t-lbl f-cream" x="450" y="200" text-anchor="middle" opacity=".55">apart · cold</text>
+                    <circle cx="455" cy="560" r="230" fill="url(#g-glow)"/>
+                    <circle class="f-deep" cx="415" cy="450" r="44"/>
+                    <rect class="f-deep" x="366" y="504" width="98" height="210" rx="49"/>
+                    <circle class="f-deep" cx="510" cy="470" r="40"/>
+                    <rect class="f-deep" x="466" y="520" width="88" height="194" rx="44"/>
+                    <path class="s-deep" stroke-width="30" stroke-linecap="round" d="M440 560 Q490 590 530 570"/>
+                    <text class="t-lbl f-glow" x="455" y="770" text-anchor="middle">together · warm</text>
+                </svg>
+            </div>
+            <p class="key reveal" style="--d:.7s">Hug your <b>parents &amp; siblings</b>.</p>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === LOOK BACK QUESTIONS (parents + affection, one discussion) === -->
+    <section class="slide bg-cream" aria-label="Look back questions">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">01 · Talk about it</div>
+            <h2 class="display reveal" style="--d:.25s">Looking back</h2>
+            <div class="qcards tight art">
+                <div class="qcard reveal" style="--d:.45s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><path class="f-cream" d="M50 84 C20 62 10 46 10 32 C10 20 20 12 31 12 C40 12 46 17 50 24 C54 17 60 12 69 12 C80 12 90 20 90 32 C90 46 80 62 50 84Z"/></svg></div>
+                    <div><div class="qt">Thankful for?</div><div class="qsub">How they raised you</div></div>
+                </div>
+                <div class="qcard reveal" style="--d:.6s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><path class="f-cream" d="M50 84 C20 62 10 46 10 32 C10 20 20 12 31 12 C40 12 46 17 50 24 C54 17 60 12 69 12 C80 12 90 20 90 32 C90 46 80 62 50 84Z"/><path class="s-clay" stroke-width="7" stroke-linejoin="round" d="M50 24 L41 42 L57 52 L45 72"/></svg></div>
+                    <div><div class="qt">What they got wrong</div><div class="qsub">Has your view changed?</div></div>
+                </div>
+                <div class="qcard reveal" style="--d:.75s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><path class="f-cream" d="M14 18 H86 Q94 18 94 26 V62 Q94 70 86 70 H44 L26 86 V70 H14 Q6 70 6 62 V26 Q6 18 14 18Z"/></svg></div>
+                    <div><div class="qt">Love: said, shown, or assumed?</div><div class="qsub">Growing up at home</div></div>
+                </div>
+                <div class="qcard reveal" style="--d:.9s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><circle class="f-cream" cx="36" cy="26" r="13"/><circle class="f-cream" cx="66" cy="30" r="11"/><path class="f-cream" d="M18 94 V60 Q18 44 36 44 Q54 44 54 60 V94Z M52 94 V64 Q52 50 66 50 Q80 50 80 64 V94Z"/><path class="s-clay" stroke-width="8" stroke-linecap="round" d="M42 64 Q58 76 72 66"/></svg></div>
+                    <div><div class="qt">Easy to hug them now?</div><div class="qsub">Why, or why not?</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 11. ANGLE 2 HOOK (two kinds of discipline) === -->
+    <section class="slide bg-night" aria-label="Angle 3">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">02 · Father God</div>
+            <h2 class="display reveal" style="--d:.25s">Two kinds of fathering.</h2>
+            <div class="art reveal" style="--d:.45s">
+                <svg viewBox="0 0 900 720">
+                    <circle cx="690" cy="420" r="300" fill="url(#g-glow)" opacity=".75"/>
+                    <path class="s-cream" stroke-width="5" opacity=".55" d="M80 500 L80 340 A130 130 0 0 1 340 340 L340 500"/>
+                    <path fill="url(#g-arch)" d="M500 500 L500 230 A190 190 0 0 1 880 230 L880 500 Z"/>
+                    <line class="s-cream" x1="40" y1="500" x2="900" y2="500" stroke-width="3" opacity=".35"/>
+                    <text class="t-lbl f-cream" x="210" y="570" text-anchor="middle" opacity=".75">Our fathers</text>
+                    <text class="t-big f-cream" x="210" y="650" text-anchor="middle" opacity=".75" style="font-size:44px">“as seemed best”</text>
+                    <text class="t-lbl f-glow" x="690" y="570" text-anchor="middle">God</text>
+                    <text class="t-big f-glow" x="690" y="650" text-anchor="middle" style="font-size:44px">“for our good”</text>
+                </svg>
+            </div>
+            <p class="key reveal" style="--d:.7s">Pray: <b>“Father, forgive them.”</b><span class="small" style="display:block">Hebrews 12:10</span></p>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 12. ANGLE 2 QUESTIONS (lens: shaped or bent) === -->
+    <section class="slide bg-cream" aria-label="Angle 3 questions">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">02 · Talk about it</div>
+            <h2 class="display reveal" style="--d:.25s">Your picture of God</h2>
+            <div class="art reveal" style="--d:.45s" style="margin-block:60px 0">
+                <svg viewBox="0 0 900 480">
+                    <circle class="f-ap" cx="90" cy="230" r="54"/>
+                    <ellipse class="f-ap" cx="450" cy="230" rx="44" ry="180" opacity=".35"/>
+                    <ellipse class="s-clay" cx="450" cy="230" rx="44" ry="180" stroke-width="5"/>
+                    <path class="s-clay" stroke-width="9" stroke-linecap="round" d="M150 210 L450 170 L820 110"/>
+                    <path class="f-clay" d="M820 90 L860 104 L826 130Z"/>
+                    <path class="s-deep" stroke-width="9" stroke-linecap="round" stroke-dasharray="22 16" opacity=".75" d="M150 250 L450 290 Q620 300 720 380 L800 430"/>
+                    <path class="f-deep" opacity=".75" d="M790 412 L830 448 L782 450Z"/>
+                    <text class="t-lbl f-clay" x="880" y="70" text-anchor="end">Shaped</text>
+                    <text class="t-lbl f-deep" x="700" y="460" text-anchor="end" opacity=".75">Bent</text>
+                    <text class="t-lbl f-deep" x="90" y="340" text-anchor="middle" style="font-size:32px">Their love</text>
+                </svg>
+            </div>
+            <div class="qcards" style="margin-top:50px">
+                <div class="qcard reveal" style="--d:.65s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><text x="50" y="76" text-anchor="middle" class="f-cream" style="font-family:var(--font-display);font-size:72px">?</text></svg></div>
+                    <div><div class="qt">Shaped it, or bent it?</div></div>
+                </div>
+                <div class="qcard reveal" style="--d:.8s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><path class="s-cream" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M20 52 L40 72 L80 30"/></svg></div>
+                    <div><div class="qt">Forgive? Thank?</div><div class="qsub">Anything to say to them</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 13. ANGLE 4 HOOK (four icon doorways) === -->
+    <section class="slide bg-night" aria-label="Angle 4">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">03 · Look ahead</div>
+            <h2 class="display reveal" style="--d:.25s">Fatherhood.</h2>
+            <div class="tiles art">
+                <div class="tile reveal" style="--d:.45s">
+                    <svg viewBox="0 0 100 100"><rect class="f-deep" x="16" y="42" width="68" height="48" rx="4"/><rect class="f-deep" x="10" y="28" width="80" height="16" rx="4"/><rect class="f-ap" x="45" y="28" width="10" height="62"/><path class="s-deep" stroke-width="7" stroke-linecap="round" d="M50 28 Q34 6 24 18 Q20 26 50 28 Q80 26 76 18 Q66 6 50 28"/></svg>
+                    <div class="lbl">A gift</div>
+                </div>
+                <div class="tile reveal" style="--d:.6s">
+                    <svg viewBox="0 0 100 100"><circle class="f-deep" cx="50" cy="50" r="20"/><path class="s-deep" stroke-width="7" stroke-linecap="round" d="M50 8 V20 M50 80 V92 M8 50 H20 M80 50 H92 M20 20 L28 28 M72 72 L80 80 M80 20 L72 28 M28 72 L20 80"/></svg>
+                    <div class="lbl">Faith, not fear</div>
+                </div>
+                <div class="tile reveal" style="--d:.75s">
+                    <svg viewBox="0 0 100 100"><path class="s-deep" stroke-width="8" stroke-linecap="round" d="M10 36 Q30 26 50 36 T90 36 M10 56 Q30 46 50 56 T90 56 M10 76 Q30 66 50 76 T90 76"/></svg>
+                    <div class="lbl">Never in anger</div>
+                </div>
+                <div class="tile reveal" style="--d:.9s">
+                    <svg viewBox="0 0 100 100"><path class="f-deep" d="M50 6 Q74 34 74 60 Q74 92 50 94 Q26 92 26 60 Q26 44 38 30 Q40 46 50 50 Q44 28 50 6Z"/></svg>
+                    <div class="lbl">It makes <i style="font-style:normal">you</i> holy</div>
+                </div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 14. ANGLE 4 QUESTIONS (generations chain) === -->
+    <section class="slide bg-cream" aria-label="Angle 4 questions">
+        <div class="pane">
+            <div class="kick reveal" style="--d:.1s">03 · Talk about it</div>
+            <h2 class="display reveal" style="--d:.25s">What passes through you?</h2>
+            <div class="art reveal" style="--d:.45s">
+                <svg viewBox="0 0 900 470">
+                    <path class="s-clay" stroke-width="6" opacity=".5" d="M150 140 H260 M380 140 H490"/>
+                    <circle class="f-clay" cx="90" cy="140" r="60" opacity=".3"/>
+                    <circle class="f-clay" cx="320" cy="140" r="60" opacity=".55"/>
+                    <circle class="f-clay" cx="560" cy="140" r="74"/>
+                    <circle class="s-clay" cx="810" cy="140" r="60" stroke-width="5" stroke-dasharray="14 10"/>
+                    <path class="s-clay" stroke-width="7" stroke-linecap="round" d="M640 140 H730"/>
+                    <path class="f-clay" d="M728 124 L750 140 L728 156Z"/>
+                    <text class="t-lbl f-deep" x="0" y="250" text-anchor="start" style="font-size:30px">Grandparents</text>
+                    <text class="t-lbl f-deep" x="320" y="250" text-anchor="middle" style="font-size:32px">Parents</text>
+                    <text class="t-lbl f-cream" x="560" y="152" text-anchor="middle" style="font-size:38px">You</text>
+                    <text class="t-lbl f-deep" x="810" y="250" text-anchor="middle" style="font-size:32px">Kids</text>
+                    <rect class="f-clay" x="300" y="320" width="300" height="90" rx="45"/>
+                    <text class="t-lbl f-cream" x="450" y="378" text-anchor="middle" style="font-size:36px">✓ Carry on</text>
+                    <rect class="s-deep" x="620" y="320" width="270" height="90" rx="45" stroke-width="4"/>
+                    <text class="t-lbl f-deep" x="755" y="378" text-anchor="middle" style="font-size:36px">✕ Stops here</text>
+                </svg>
+            </div>
+            <div class="qcards" style="margin-top:40px">
+                <div class="qcard reveal" style="--d:.7s">
+                    <div class="ic"><svg viewBox="0 0 100 100"><circle class="f-cream" cx="50" cy="66" r="22"/><path class="s-cream" stroke-width="7" stroke-linecap="round" d="M50 18 V30 M18 34 L26 42 M82 34 L74 42 M8 66 H20 M80 66 H92"/><rect class="f-clay" x="0" y="70" width="100" height="30"/><path class="s-cream" stroke-width="7" stroke-linecap="round" d="M10 78 H90"/></svg></div>
+                    <div><div class="qt">Fears? Hopes?</div><div class="qsub">About one day being a dad</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="foot"><span>Embodied for Family</span><span class="count"></span></div>
+    </section>
+
+    <!-- === 15. CLOSE === -->
+    <section class="slide bg-clay" aria-label="Close">
+        <div class="arch framed door-right"><div class="fig big"></div><div class="fig small"></div></div>
+        <div class="title-wrap">
+            <div class="kick reveal" style="--d:.1s">Before we go</div>
+            <h1 class="display reveal" style="--d:.3s;font-size:140px">Pray for each other’s parents.</h1>
+            <p class="lede reveal" style="--d:.6s">This week: <b>hug or thank one.</b></p>
+        </div>
+    </section>
+
+</main>
+</div>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Arrows / Space / PageUp-Down, tap left or right half, swipe
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = [...document.querySelectorAll('.slide')];
+        this.stage = document.getElementById('deckStage');
+        this.progress = document.getElementById('progress');
+        this.current = 0;
+        this.slides.forEach((s, i) => s.querySelectorAll('.count').forEach(c => {
+            c.textContent = `${String(i + 1).padStart(2, '0')} / ${this.slides.length}`;
+        }));
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        const fromHash = parseInt(location.hash.slice(1), 10);
+        this.show(Number.isFinite(fromHash) ? fromHash - 1 : 0);
+    }
+
+    /* Scale the 1080×1920 stage to the window, letterboxed */
+    setupStageScale() {
+        const scale = () => {
+            const f = Math.min(innerWidth / 1080, innerHeight / 1920);
+            const x = (innerWidth - 1080 * f) / 2;
+            const y = (innerHeight - 1920 * f) / 2;
+            this.stage.style.transform = `translate(${x}px, ${y}px) scale(${f})`;
+        };
+        scale();
+        addEventListener('resize', scale);
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', e => {
+            if (editor.isActive) return;
+            if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.show(this.current + 1); }
+            if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.show(this.current - 1); }
+            if (e.key === 'Home') this.show(0);
+            if (e.key === 'End') this.show(this.slides.length - 1);
+        });
+    }
+
+    /* Swipe on phones; tap the left third to go back, anywhere else to go forward */
+    setupTouchNav() {
+        let sx = 0, sy = 0, moved = false;
+        addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; moved = false; }, { passive: true });
+        addEventListener('touchend', e => {
+            if (editor.isActive) return;
+            const dx = e.changedTouches[0].clientX - sx;
+            const dy = e.changedTouches[0].clientY - sy;
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { moved = true; this.show(this.current + (dx < 0 ? 1 : -1)); }
+        });
+        document.querySelector('.deck-viewport').addEventListener('click', e => {
+            if (editor.isActive || moved) { moved = false; return; }
+            this.show(this.current + (e.clientX < innerWidth / 3 ? -1 : 1));
+        });
+    }
+
+    show(i) {
+        this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+        this.slides.forEach((s, n) => {
+            s.classList.toggle('active', n === this.current);
+            s.classList.toggle('visible', n === this.current);
+        });
+        this.progress.style.width = `${((this.current + 1) / this.slides.length) * 100}%`;
+        history.replaceState(null, '', `#${this.current + 1}`);
+    }
+}
+
+/* ===========================================
+   INLINE EDITOR
+   E or the top-left corner toggles editing; Ctrl/Cmd+S saves a copy
+   =========================================== */
+const editor = {
+    isActive: false,
+    selector: '.kick, .display, .lede, blockquote, .key, .small, .flow .lbl, .flow .sub, .flow .grp, .pairs2 > div, .qt, .qsub, .chip span, .tile .lbl, .steps span',
+    toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        document.getElementById('editToggle').classList.toggle('active', this.isActive);
+        document.querySelectorAll(this.selector).forEach(el => {
+            if (this.isActive) el.setAttribute('contenteditable', 'true');
+            else el.removeAttribute('contenteditable');
+        });
+    },
+    save() {
+        const wasActive = this.isActive;
+        if (wasActive) this.toggleEditMode();
+        const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+        a.download = 'embodied-for-family-phone.html';
+        a.click();
+        if (wasActive) this.toggleEditMode();
+    }
+};
+
+const hotzone = document.querySelector('.edit-hotzone');
+const editToggle = document.getElementById('editToggle');
+let hideTimeout = null;
+editToggle.addEventListener('click', () => editor.toggleEditMode());
+hotzone.addEventListener('click', () => editor.toggleEditMode());
+hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); editToggle.classList.add('show'); });
+hotzone.addEventListener('mouseleave', () => {
+    hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400);
+});
+editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+editToggle.addEventListener('mouseleave', () => {
+    hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400);
+});
+document.addEventListener('keydown', e => {
+    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) editor.toggleEditMode();
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); editor.save(); }
+});
+
+const deck = new SlidePresentation();
+</script>
+</body>
+</html>
